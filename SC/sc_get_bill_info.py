@@ -33,6 +33,13 @@ bill_numbers_by_chamber = {
     'H': [i for i in range(3000, 6000)]
 }
 
+session_dict = {
+    126 : "2025-26",
+    125 : "2023-24",
+    124 : '2021-22',
+    123 : "2019-20"  
+}
+
 driver = sb.get_driver(browser='chrome', headless=True)
 driver.set_page_load_timeout(60)
 
@@ -77,7 +84,7 @@ for session in sessions:
                 time.sleep(1)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 
-                bill_info['session'] = session
+                bill_info['session'] = session_dict[session]
                 bill_info['bill_number'] = bill_number
                 
                 try:
@@ -86,7 +93,6 @@ for session in sessions:
                     error_msg = f"Error finding bill list items in session {session} bill number {bill_number}: {e}"
                     print(error_msg)
                     logging.error(error_msg)
-                    #TODO continue #add this when looping
 
                 # get the header text: has the basic bill info
                 bill_header = bill_list[0].find('span')
@@ -133,7 +139,7 @@ for session in sessions:
 
                 bill_info['actions'] = action_rows
 
-                all_bills_info[f"{session}-{bill_number}"] = bill_info
+                all_bills_info[f"{session_dict[session]}-{bill_number}"] = bill_info
 
                 stob = 1
 
@@ -141,7 +147,7 @@ driver.quit()
 
 
 # Save the bill info to a JSON file
-with open('va_bills_info.json', 'w') as f:
+with open('sc_bills_info.json', 'w') as f:
     json.dump(all_bills_info, f, indent=4)
 logging.info("Bill information saved to va_bills_info.json")
 logging.info(f"Processed {len(all_bills_info)} bills from sessions {sessions}")
