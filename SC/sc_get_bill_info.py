@@ -4,11 +4,7 @@
 # under class="bill-list-item"
 # first span then get member_code from href and name from text
 
-#
-# TODO finish and check updating logic--need to:
-# 1. create new json for incremental bills
-# 2. load last json file (with full history)
-# 3. join and write to original json file name
+# NOTE: url calls use session number (e.g. 126), json uses session name ('2025-26')
 
 # need to differentiate between:
 #    sponsors and co-sponsors
@@ -45,11 +41,19 @@ def get_last_bill_numbers(session):
         chamber_bills = [x for x in session_data if x['chamber'] == chamber]
         last_bills[chamber] = max([int(bill['bill_number']) for bill in chamber_bills])
 
-
     return last_bills
 
 
+last_bills = get_last_bill_numbers('2025-26')
+stob = 1
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+session_dict = {
+    126 : "2025-26",
+    125 : "2023-24",
+    124 : '2021-22',
+    123 : "2019-20"  
+}
 
 all_bills_info = {}
 chambers = ['S', 'H']
@@ -57,7 +61,7 @@ chambers = ['S', 'H']
 # set sessions here
 sessions = [126, 125]
 # set current session here for updating
-current_session = 126
+current_session = session_dict[126]
 
 ## updating logic
 update = False
@@ -84,17 +88,6 @@ else: # not updating
 bill_numbers_by_chamber = {
     'S': [i for i in range(start_S, 3000)],
     'H': [i for i in range(start_H, 6000)]
-}
-
-
-
-
-
-session_dict = {
-    126 : "2025-26",
-    125 : "2023-24",
-    124 : '2021-22',
-    123 : "2019-20"  
 }
 
 driver = sb.get_driver(browser='chrome', headless=True)
