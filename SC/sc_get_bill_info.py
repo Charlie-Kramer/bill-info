@@ -52,12 +52,15 @@ def get_last_bill_numbers(session):
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 all_bills_info = {}
-bill_numbers = [i for i in range(1, 6000)] 
-sessions = [126, 125]
-current_session = 126
 chambers = ['S', 'H']
+
+# set sessions here
+sessions = [126, 125]
+# set current session here for updating
+current_session = 126
+
 ## updating logic
-update = True
+update = False
 
 if update:
     if len(sessions) != 1 and sessions[0] != current_session:
