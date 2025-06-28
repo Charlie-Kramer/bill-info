@@ -4,7 +4,7 @@
 
 The code is in sc_get_bill_info.py; it writes to sc_bills_info.json. 
 
-# NOTE: url calls use session number (e.g. 126), json uses session name ('2025-26')
+### NOTE: url calls use session number (e.g. 126), json uses session name ('2025-26')
 
 Set these parameters:
 
