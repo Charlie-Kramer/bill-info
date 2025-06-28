@@ -4,14 +4,19 @@
 # under class="bill-list-item"
 # first span then get member_code from href and name from text
 
+#
+# TODO finish and check updating logic--need to:
+# 1. create new json for incremental bills
+# 2. load last json file (with full history)
+# 3. join and write to original json file name
+
 # need to differentiate between:
 #    sponsors and co-sponsors
 #    House and Senate bills (different url structure?)
 #    per legislative services: 
-#       senate bills are 1-2999
+#       senate bills are 1-2999 (max)
 #       House bills are 3000+
 #    (true for every session, not just 126)
-
 
 
 import requests
@@ -22,16 +27,65 @@ import time
 import logging
 import re
 
+def get_last_bill_numbers(session):
+    """
+    read the last .json file to get the last processed bill number for each chamber for the given session, return a dictionary
+    with the last bill number for each chamber.
+    
+    """
+    last_bills = {}
+
+    #load the json file if it exists
+    with open('SC/sc_bills_info.json', 'r') as f:
+        all_bills_info = json.load(f)
+    
+    session_data = [value for key, value in all_bills_info.items() if value['session'] == session]
+    
+    for chamber in ['S', 'H']:
+        chamber_bills = [x for x in session_data if x['chamber'] == chamber]
+        last_bills[chamber] = max([int(bill['bill_number']) for bill in chamber_bills])
+
+
+    return last_bills
+
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 all_bills_info = {}
 bill_numbers = [i for i in range(1, 6000)] 
 sessions = [126, 125]
+current_session = 126
 chambers = ['S', 'H']
+## updating logic
+update = True
+
+if update:
+    if len(sessions) != 1 and sessions[0] != current_session:
+        error_msg = f"Set to update = True but Sessions list {sessions} does not match current session {current_session}. Please update the sessions list."
+        print(error_msg)
+        logging.error(error_msg)
+        raise ValueError(error_msg)
+    else:
+        # get the last bill numbers for each chamber for the current session
+        last_bills = get_last_bill_numbers(current_session)
+        start_S = last_bills['S'] + 1
+        start_H = last_bills['H'] + 1
+
+        logging.info(f"Starting Senate bills from {start_S} and House bills from {start_H}")
+        print(f"Starting Senate bills from {start_S} and House bills from {start_H}")
+else: # not updating
+    start_S = 1
+    start_H = 3000
+    logging.info(f"Not updating, sessions = {sessions}, starting Senate bills from 1 and House bills from 3000")
+
 bill_numbers_by_chamber = {
-    'S': [i for i in range(1, 3000)],
-    'H': [i for i in range(3000, 6000)]
+    'S': [i for i in range(start_S, 3000)],
+    'H': [i for i in range(start_H, 6000)]
 }
+
+
+
+
 
 session_dict = {
     126 : "2025-26",
@@ -147,10 +201,19 @@ driver.quit()
 
 
 # Save the bill info to a JSON file
-with open('sc_bills_info.json', 'w') as f:
-    json.dump(all_bills_info, f, indent=4)
-logging.info("Bill information saved to va_bills_info.json")
+if update:
+    try:
+        with open('SC/sc_bills_info.json', 'r') as f:
+            existing_bills_info = json.load(f)
+        all_bills_info.update(existing_bills_info)
+    except FileNotFoundError:
+        logging.warning("No existing bill info found, creating new file.")
+else:
+    with open('sc_bills_info.json', 'w') as f:
+        json.dump(all_bills_info, f, indent=4)
+
+logging.info("Bill information saved to sc_bills_info.json")
 logging.info(f"Processed {len(all_bills_info)} bills from sessions {sessions}")
 print(f"Processed {len(all_bills_info)} bills from sessions {sessions}")
-            
+        
 
